@@ -1,0 +1,9 @@
+name: PlayerWarps
+version: 1.0.0-BETA
+main: PWarps\Main
+api: 3.0.0
+author: Pydow, SchdowNVIDIA
+description: PlayerWarps Plugin
+commands:
+  pwarp:
+    description: "PlayerWarps command"

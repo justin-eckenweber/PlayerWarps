@@ -1,0 +1,9 @@
+# Do not edit this value
+cfg-version: 1
+
+# Prices for pwarp
+price:
+  create: 1000
+  delete: 0
+  newpos: 1000
+
