@@ -39,7 +39,7 @@ class Main extends PluginBase implements Listener {
                 case "create":
                     if(!isset($args[1])) {
                         $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about pwarp.");
-                        return;
+                        return true;
                     }
                     $pwarpname = $args[1];
                     $money = $economy->myMoney($name);
