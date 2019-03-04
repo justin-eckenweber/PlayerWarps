@@ -9,6 +9,7 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\math\Vector3;
+use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
@@ -32,23 +33,26 @@ class Main extends PluginBase implements Listener {
         $economy = EconomyAPI::getInstance();
         if($command->getName() == "pwarp") {
             if(!isset($args[0])) {
-                $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about pwarp.");
+                $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about PlayerWarps.");
                 return true;
             }
             switch($args[0]) {
+                case "price":
+                    $sender->sendMessage("§8[§aPlayerWarps§8] §fThe current price of an PWarp is §b$" . $createPrice);
+                    return true;
                 case "create":
                     if(!isset($args[1])) {
-                        $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about pwarp.");
+                        $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about PlayerWarps.");
                         return true;
                     }
                     $pwarpname = $args[1];
                     $money = $economy->myMoney($name);
                     if($money < $createPrice) {
-                        $sender->sendMessage("§cYou don't have enough money to create a pwarp! You need " . $createPrice . "$ to create one!");
+                        $sender->sendMessage("§cYou don't have enough money to create a PWarp! You need " . $createPrice . "$ to create one!");
                         return true;
                     }
                     if(file_exists($this->getDataFolder() . "/pwarps/" . $pwarpname . ".yml")) {
-                        $sender->sendMessage("§cERROR: §fThere is already a pwarp with the name" . $pwarpname . "!");
+                        $sender->sendMessage("§cERROR: §fThere is already a PWarp with the name" . $pwarpname . "!");
                         return true;
                     }
                     $economy->reduceMoney($name, $createPrice);
@@ -63,10 +67,11 @@ class Main extends PluginBase implements Listener {
                     $newPWARP->set("z", $z);
                     $newPWARP->set("world", $world);
                     $newPWARP->save();
-                    $sender->sendMessage("§c§8[§aPlayerWarps§8] The pwarp §b" . $pwarpname ." §fhas been successfully created!");
+                    $sender->sendMessage("§c§8[§aPlayerWarps§8] §fThe PWarp §b" . $pwarpname ." §fhas been successfully created!");
                     return true;
                 case "help":
-                    break;
+                    $this->getMessage($sender, "help");
+                    return true;
                 default:
                     $pwarpname = $args[0];
                     if(!file_exists($this->getDataFolder() . "/pwarps/" . $pwarpname . ".yml")) {
@@ -80,8 +85,19 @@ class Main extends PluginBase implements Listener {
                     $world = $PWARP->get("world");
                     $sender->teleport($this->getServer()->getLevelByName($world)->getSafeSpawn());
                     $sender->teleport(new Vector3($x, $y, $z));
+                    $sender->sendMessage("§8[§aPlayerWarps§8] §fYou've been successfully teleported to the PWarp §b" . $pwarpname . "§f!");
                     return true;
             }
+        }
+    }
+
+    public function getMessage(Player $player, $type) {
+        if($type == "help") {
+            $player->sendMessage("--- PlayerWarps Help ---");
+            $player->sendMessage("§f/pwarp create <pwarpname> §7- create pwarp");
+            $player->sendMessage("§f/pwarp price §7- shows price of pwarp");
+            $player->sendMessage("§f/pwarp <pwarp-name> §7- teleport to pwarp");
+            $player->sendMessage("--- PlayerWarps Help ---");
         }
     }
 }
