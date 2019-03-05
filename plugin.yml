@@ -4,6 +4,8 @@ main: SchdowNVIDIA\PlayerWarps\Main
 api: 3.0.0
 author: Pydow, SchdowNVIDIA
 description: PlayerWarps Plugin
+depend:
+  - EconomyAPI
 commands:
   pwarp:
     description: "PlayerWarps command"
