@@ -42,8 +42,8 @@ class Main extends PluginBase implements Listener {
                 case "price":
                     $sender->sendMessage("§8[§aPlayerWarps§8] §fThe current prices of an PWarp are:");
                     $sender->sendMessage("§bCreate: §f" .$createPrice."$");
-                    $sender->sendMessage("§bNewpos: §f" .$createPrice."$");
-                    $sender->sendMessage("§bDelete: §f" .$createPrice."$");
+                    $sender->sendMessage("§bNewpos: §f" .$newposPrice."$");
+                    $sender->sendMessage("§bDelete: §f" .$deletePrice."$");
                     return true;
                 case "delete":
                     if(!isset($args[1])) {
