@@ -7,3 +7,12 @@ description: PlayerWarps Plugin
 commands:
   pwarp:
     description: "PlayerWarps command"
+    permission:
+permissions:
+  pwarp.*:
+    default: op
+    children:
+      pwarp.warps.4:
+        default: true
+      pwarp.warps.unlimited:
+        default: true

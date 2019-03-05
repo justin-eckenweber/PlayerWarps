@@ -8,6 +8,7 @@ use onebone\economyapi\EconomyAPI;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
+use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
@@ -19,7 +20,7 @@ class Main extends PluginBase implements Listener {
     public function onEnable()
     {
         @mkdir($this->getDataFolder());
-        @mkdir($this->getDataFolder().'/pwarps');
+        $this->saveResource("pwarps.yml");
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
         $this->saveDefaultConfig();
     }
@@ -29,8 +30,9 @@ class Main extends PluginBase implements Listener {
         $createPrice = $this->getConfig()->getNested("price.create");
         $deletePrice = $this->getConfig()->getNested("price.delete");
         $newposPrice = $this->getConfig()->getNested("price.newpos");
-        $name = $sender->getName();
+        $name = strtolower($sender->getName());
         $economy = EconomyAPI::getInstance();
+        $PWARPS = new Config($this->getDataFolder() . "/pwarps.yml", Config::YAML);
         if($command->getName() == "pwarp") {
             if(!isset($args[0])) {
                 $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about PlayerWarps.");
@@ -51,7 +53,7 @@ class Main extends PluginBase implements Listener {
                         $sender->sendMessage("§cYou don't have enough money to create a PWarp! You need " . $createPrice . "$ to create one!");
                         return true;
                     }
-                    if(file_exists($this->getDataFolder() . "/pwarps/" . $pwarpname . ".yml")) {
+                    if($PWARPS->exists($pwarpname)) {
                         $sender->sendMessage("§cERROR: §fThere is already a PWarp with the name" . $pwarpname . "!");
                         return true;
                     }
@@ -60,31 +62,74 @@ class Main extends PluginBase implements Listener {
                     $y = $sender->getY();
                     $z = $sender->getZ();
                     $world = $sender->getLevel()->getName();
-                    $newPWARP = new Config($this->getDataFolder() . "/pwarps/" . $pwarpname . ".yml", Config::YAML);
-                    $newPWARP->set("owner", strtolower($name));
-                    $newPWARP->set("x", $x);
-                    $newPWARP->set("y", $y);
-                    $newPWARP->set("z", $z);
-                    $newPWARP->set("world", $world);
-                    $newPWARP->save();
+                    $PWARPS->setNested($pwarpname . ".owner", $name);
+                    $PWARPS->setNested($pwarpname. ".x", $x);
+                    $PWARPS->setNested($pwarpname . ".y", $y);
+                    $PWARPS->setNested($pwarpname.".z", $z);
+                    $PWARPS->setNested($pwarpname.".world", $world);
+                    $PWARPS->save();
+                    $PWARPS->reload();
                     $sender->sendMessage("§c§8[§aPlayerWarps§8] §fThe PWarp §b" . $pwarpname ." §fhas been successfully created!");
                     return true;
                 case "help":
                     $this->getMessage($sender, "help");
                     return true;
-                default:
-                    $pwarpname = $args[0];
-                    if(!file_exists($this->getDataFolder() . "/pwarps/" . $pwarpname . ".yml")) {
-                        $sender->sendMessage("§cERROR: §fThere is no pwarp with the name" . $pwarpname . "!");
+                case "info":
+                    $pwarpname = $args[1];
+                    if(!$PWARPS->exists($pwarpname)) {
+                        $sender->sendMessage("§cERROR: §fThere is no pwarp with the name §b" . $pwarpname . "§f!");
                         return true;
                     }
-                    $PWARP = new Config($this->getDataFolder() . "./pwarps/" . $pwarpname . ".yml", Config::YAML);
-                    $x = $PWARP->get("x");
-                    $y = $PWARP->get("y");
-                    $z = $PWARP->get("z");
-                    $world = $PWARP->get("world");
-                    $sender->teleport($this->getServer()->getLevelByName($world)->getSafeSpawn());
-                    $sender->teleport(new Vector3($x, $y, $z));
+                    $x = $PWARPS->getNested($pwarpname.".x");
+                    $y = $PWARPS->getNested($pwarpname.".y");
+                    $z = $PWARPS->getNested($pwarpname.".z");
+                    $world = $PWARPS->getNested($pwarpname.".world");
+                    $pwarpOwner = $PWARPS->getNested($pwarpname.".owner");
+                    $sender->sendMessage("--- PlayerWarp Info ---");
+                    $sender->sendMessage("Owner: " . $pwarpOwner);
+                    $sender->sendMessage("Position: (X: " . $x. ", Y: " . $y . ", Z: " . $z. ")");
+                    $sender->sendMessage("World: " . $world);
+                    $sender->sendMessage("--- PlayerWarp Info ---");
+                    return true;
+                case "newpos":
+                    $pwarpname = $args[1];
+                    if(!$PWARPS->exists($pwarpname)) {
+                        $sender->sendMessage("§cERROR: §fThere is no pwarp with the name §b" . $pwarpname . "§f!");
+                        return true;
+                    }
+                    if($PWARPS->getNested($pwarpname.".owner") == $sender->getName()) {
+                        $sender->sendMessage("§cYou can't edit this warp, because it's not yours!");
+                        return true;
+                    }
+                    if($economy->myMoney($name) < $newposPrice) {
+                        $sender->sendMessage("§cYou don't have enough money to newpos this warp!");
+                        return true;
+                    }
+                    $economy->reduceMoney($name, $newposPrice);
+                    $x = $sender->getX();
+                    $y = $sender->getY();
+                    $z = $sender->getZ();
+                    $world = $sender->getLevel()->getName();
+                    $PWARPS->setNested($pwarpname. ".x", $x);
+                    $PWARPS->setNested($pwarpname . ".y", $y);
+                    $PWARPS->setNested($pwarpname.".z", $z);
+                    $PWARPS->setNested($pwarpname.".world", $world);
+                    $PWARPS->save();
+                    $PWARPS->reload();
+                    $sender->sendMessage("§8[§aPlayerWarps§8] §fNew position has been set.");
+                    return true;
+
+                default:
+                    $pwarpname = $args[0];
+                    if(!$PWARPS->exists($pwarpname)) {
+                        $sender->sendMessage("§cERROR: §fThere is no pwarp with the name " . $pwarpname . "!");
+                        return true;
+                    }
+                    $x = $PWARPS->getNested($pwarpname.".x");
+                    $y = $PWARPS->getNested($pwarpname.".y");
+                    $z = $PWARPS->getNested($pwarpname.".z");
+                    $level = $this->getServer()->getLevelByName($PWARPS->getNested($pwarpname.".world"));
+                    $sender->teleport(new Position($x, $y, $z, $level));
                     $sender->sendMessage("§8[§aPlayerWarps§8] §fYou've been successfully teleported to the PWarp §b" . $pwarpname . "§f!");
                     return true;
             }
@@ -94,9 +139,11 @@ class Main extends PluginBase implements Listener {
     public function getMessage(Player $player, $type) {
         if($type == "help") {
             $player->sendMessage("--- PlayerWarps Help ---");
-            $player->sendMessage("§f/pwarp create <pwarpname> §7- create pwarp");
-            $player->sendMessage("§f/pwarp price §7- shows price of pwarp");
             $player->sendMessage("§f/pwarp <pwarp-name> §7- teleport to pwarp");
+            $player->sendMessage("§f/pwarp price §7- shows price of pwarp");
+            $player->sendMessage("§f/pwarp create <pwarpname> §7- create pwarp");
+            $player->sendMessage("§f/pwarp newpos <pwarp-name> §7- change position of pwarp");
+            $player->sendMessage("§f/pwarp info <pwarp-name> §7- get info of pwarp");
             $player->sendMessage("--- PlayerWarps Help ---");
         }
     }
