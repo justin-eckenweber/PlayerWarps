@@ -40,8 +40,36 @@ class Main extends PluginBase implements Listener {
             }
             switch($args[0]) {
                 case "price":
-                    $sender->sendMessage("§8[§aPlayerWarps§8] §fThe current price of an PWarp is §b$" . $createPrice);
+                    $sender->sendMessage("§8[§aPlayerWarps§8] §fThe current prices of an PWarp are:");
+                    $sender->sendMessage("§bCreate: §f" .$createPrice."$");
+                    $sender->sendMessage("§bNewpos: §f" .$createPrice."$");
+                    $sender->sendMessage("§bDelete: §f" .$createPrice."$");
                     return true;
+                case "delete":
+                    if(!isset($args[1])) {
+                        $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about PlayerWarps.");
+                        return true;
+                    }
+                    $pwarpname = $args[1];
+                    $money = $economy->myMoney($name);
+                    if($money < $deletePrice) {
+                        $sender->sendMessage("§cYou don't have enough money to delete an PWarp! You need " . $createPrice . "$ to create one!");
+                        return true;
+                    }
+                    if(!$PWARPS->exists($pwarpname)) {
+                        $sender->sendMessage("§cERROR: §fThere is no PWarp with the name §b" . $pwarpname . "§f!");
+                        return true;
+                    }
+                    if($PWARPS->getNested($pwarpname.".owner") != $name) {
+                        $sender->sendMessage("§cYou can't delete this pwarp, because it's not yours!");
+                        return true;
+                    }
+                    $PWARPS->remove($pwarpname);
+                    $PWARPS->save();
+                    $PWARPS->reload();
+                    $sender->sendMessage("§8[§aPlayerWarps§8] §fPWarp §b".$pwarpname." §fsuccessfully deleted!");
+                    return true;
+
                 case "create":
                     if(!isset($args[1])) {
                         $sender->sendMessage("§cWRONG USAGE: §fRun /pwarp help to get help about PlayerWarps.");
@@ -118,6 +146,16 @@ class Main extends PluginBase implements Listener {
                     $PWARPS->reload();
                     $sender->sendMessage("§8[§aPlayerWarps§8] §fNew position has been set.");
                     return true;
+                case "list":
+                    $pwarplist = array();
+                    foreach ($PWARPS->getAll(true) as $pwarp) {
+                        //$sender->sendMessage($pwarp);
+                         array_push($pwarplist, $pwarp);
+                    }
+                    $sender->sendMessage("§bRegistered PlayerWarps:");
+                    $sender->sendMessage(implode(", ", $pwarplist));
+                    return true;
+
 
                 default:
                     $pwarpname = $args[0];
@@ -139,11 +177,13 @@ class Main extends PluginBase implements Listener {
     public function getMessage(Player $player, $type) {
         if($type == "help") {
             $player->sendMessage("--- PlayerWarps Help ---");
-            $player->sendMessage("§f/pwarp <pwarp-name> §7- teleport to pwarp");
-            $player->sendMessage("§f/pwarp price §7- shows price of pwarp");
-            $player->sendMessage("§f/pwarp create <pwarpname> §7- create pwarp");
-            $player->sendMessage("§f/pwarp newpos <pwarp-name> §7- change position of pwarp");
-            $player->sendMessage("§f/pwarp info <pwarp-name> §7- get info of pwarp");
+            $player->sendMessage("§f/pwarp <pwarp-name> §7- teleport to an pwarp");
+            $player->sendMessage("§f/pwarp price §7- shows alls prices of an pwarp");
+            $player->sendMessage("§f/pwarp create <pwarpname> §7- create an pwarp");
+            $player->sendMessage("§f/pwarp delete <pwarpname> §7- delete an pwarp");
+            $player->sendMessage("§f/pwarp newpos <pwarp-name> §7- change position of an pwarp");
+            $player->sendMessage("§f/pwarp info <pwarp-name> §7- get info of an pwarp");
+            $player->sendMessage("§f/pwarp list §7- get a list of all pwarps");
             $player->sendMessage("--- PlayerWarps Help ---");
         }
     }

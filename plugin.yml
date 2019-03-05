@@ -12,7 +12,7 @@ permissions:
   pwarp.*:
     default: op
     children:
-      pwarp.warps.4:
+      pwarp.warps.2:
         default: true
       pwarp.warps.unlimited:
         default: true
