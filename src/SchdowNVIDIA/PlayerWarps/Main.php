@@ -1,7 +1,5 @@
 <?php
 
-namespace SchdowNVIDIA\PlayerWarps;
-
 /*
     Copyright (C) 2019 SchdowNVIDIA
 
@@ -18,6 +16,8 @@ namespace SchdowNVIDIA\PlayerWarps;
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+namespace SchdowNVIDIA\PlayerWarps;
 
 use onebone\economyapi\EconomyAPI;
 use pocketmine\command\Command;
